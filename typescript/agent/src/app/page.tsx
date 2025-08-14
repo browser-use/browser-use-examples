@@ -4,7 +4,6 @@ import { Conversation, ConversationContent, ConversationScrollButton } from "@/c
 import { Message, MessageContent } from "@/components/ai-elements/message";
 import {
   PromptInput,
-  PromptInputButton,
   PromptInputModelSelect,
   PromptInputModelSelectContent,
   PromptInputModelSelectItem,
@@ -19,7 +18,7 @@ import { Reasoning, ReasoningContent, ReasoningTrigger } from "@/components/ai-e
 import { Response } from "@/components/ai-elements/response";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { GlobeIcon, Loader } from "lucide-react";
+import { Loader } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -39,7 +38,6 @@ const MODELS = [
 export default function Home() {
   const [input, setInput] = useState("");
   const [model, setModel] = useState<string>(MODELS[0].value);
-  const [webSearch, setWebSearch] = useState(false);
   const { messages, sendMessage, status } = useChat<ChatMessage>({
     transport: new DefaultChatTransport({
       api: "/api/chat",
@@ -55,14 +53,13 @@ export default function Home() {
           {
             body: {
               model: model,
-              webSearch: webSearch,
             },
           },
         );
         setInput("");
       }
     },
-    [input, model, webSearch, sendMessage],
+    [input, model, sendMessage],
   );
 
   const liveUrl = useMemo(() => {
@@ -96,7 +93,7 @@ export default function Home() {
             {liveUrl != null ? (
               <iframe src={liveUrl} className="w-full h-full border border-dashed border-gray-400" />
             ) : (
-              <Image src="/browseruse-black.svg" alt="logo" width={40} height={40} className="size-16 object-contain" />
+              <Image src="/browseruse.svg" alt="logo" width={40} height={40} className="size-16 object-contain" />
             )}
           </div>
         </div>
@@ -124,7 +121,7 @@ export default function Home() {
                           return (
                             <Reasoning
                               key={`${message.id}-${i}`}
-                              className="w-full"
+                              className="w-full mb-0"
                               isStreaming={status === "streaming"}
                             >
                               <ReasoningTrigger />
@@ -164,10 +161,6 @@ export default function Home() {
             <PromptInputTextarea onChange={(e) => setInput(e.target.value)} value={input} />
             <PromptInputToolbar>
               <PromptInputTools>
-                <PromptInputButton variant={webSearch ? "default" : "ghost"} onClick={() => setWebSearch(!webSearch)}>
-                  <GlobeIcon size={16} />
-                  <span>Search</span>
-                </PromptInputButton>
                 <PromptInputModelSelect
                   onValueChange={(value) => {
                     setModel(value);

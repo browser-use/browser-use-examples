@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Browser Use Agent
 
-## Getting Started
+> Create an agent that can Browse the Web using Browser Use.
 
-First, run the development server:
+A Next.js application that provides an AI-powered web browsing assistant using the Browser Use SDK. This agent can execute tasks in a web browser, monitor their progress, and provide real-time updates through a streaming interface.
+
+## Features
+
+- **Web Task Execution**: Run automated tasks in web browsers
+- **Real-time Monitoring**: Stream task progress and status updates
+- **Session Management**: Continue tasks across browser sessions
+- **AI Integration**: Powered by AI models for intelligent task handling
+- **Streaming Responses**: Real-time updates using Vercel AI SDK
+
+## Core Components
+
+### API Route (`/api/chat`)
+The main API endpoint that handles chat interactions and web task execution:
+
+- **`runTask`**: Creates and executes new browser tasks
+- **`continueTask`**: Continues existing tasks using session IDs
+- **Task Status Tracking**: Monitors running, paused, stopped, and finished states
+- **Live URL Access**: Provides real-time browser session URLs
+
+## Setup
+
+### Prerequisites
+- Node.js 18+ 
+- pnpm package manager
+
+### Environment Variables
+Create a `.env.local` file with the following variables:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Browser Use API Key (required)
+BROWSER_USE_API_KEY=your_browser_use_api_key_here
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation & Development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Install dependencies
+pnpm i
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Start Dev Server
+pnpm dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-To learn more about Next.js, take a look at the following resources:
+## Usage
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Start a Task**: Use the chat interface to describe what you want to accomplish in the browser
+2. **Monitor Progress**: Watch real-time updates as the task executes
+3. **Access Live Session**: Click on the live URL to see the browser in action
+4. **Continue Tasks**: Use session IDs to resume interrupted tasks
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Architecture
 
-## Deploy on Vercel
+The application uses:
+- **Next.js 14** with App Router
+- **Vercel AI SDK** for streaming responses
+- **Browser Use SDK** for web automation
+- **TypeScript** for type safety
+- **Tailwind CSS** for styling
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+<p align="center">
+  <img src="media/app.png" alt="App Screenshot" height="400" />
+</p>

@@ -151,10 +151,10 @@ export type ChatMessage = UIMessage<never, UIDataTypes, ChatTools>;
 // ROUTE
 
 export async function POST(req: Request) {
-  const { messages, model, webSearch }: { messages: UIMessage[]; model: string; webSearch: boolean } = await req.json();
+  const { messages, model }: { messages: UIMessage[]; model: string } = await req.json();
 
   const result = streamText({
-    model: webSearch ? "perplexity/sonar" : model,
+    model: model,
     messages: convertToModelMessages(messages),
     system:
       "You are a helpful assistant that can answer questions and help with tasks. You can use the tools provided to you to help you answer questions and help with tasks.",
