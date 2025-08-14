@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@ai-sdk/react':
         specifier: ^2.0.13
-        version: 2.0.13(react@19.1.0)(zod@3.25.76)
+        version: 2.0.13(react@19.1.0)(zod@4.0.17)
       '@icons-pack/react-simple-icons':
         specifier: ^13.7.0
         version: 13.7.0(react@19.1.0)
@@ -40,7 +40,10 @@ importers:
         version: 1.2.2(@types/react@19.1.10)(react@19.1.0)
       ai:
         specifier: ^5.0.13
-        version: 5.0.13(zod@3.25.76)
+        version: 5.0.13(zod@4.0.17)
+      browser-use-sdk:
+        specifier: 0.1.1
+        version: 0.1.1(zod@4.0.17)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -90,8 +93,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1(react@19.1.0)
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4
+        version: 4.0.17
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3
@@ -1222,6 +1225,11 @@ packages:
   braces@3.0.3:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
+
+  browser-use-sdk@0.1.1:
+    resolution: {integrity: sha512-/uwjVZqsix9YlJvHGmX902hBrcFHWP7YoL0++/25enUTAqNeQ8uEFyNJXa3PjPYV4JBRgoaQXUG9GTB0XJesEw==}
+    peerDependencies:
+      zod: ^4.0.17
 
   call-bind-apply-helpers@1.0.2:
     resolution: {integrity: sha512-Sp1ablJ0ivDkSzjcaJdxEunN5/XvksFJ2sMBFfq6x0ryhQV/2b/KwFe21cMpmHtPOSij8K99/wSfoEuTObmuMQ==}
@@ -2858,41 +2866,41 @@ packages:
     peerDependencies:
       zod: ^3.24.1
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+  zod@4.0.17:
+    resolution: {integrity: sha512-1PHjlYRevNxxdy2JZ8JcNAw7rX8V9P1AKkP+x/xZfxB0K5FYfuV+Ug6P/6NVSR2jHQ+FzDDoDHS04nYUsOIyLQ==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
 snapshots:
 
-  '@ai-sdk/gateway@1.0.6(zod@3.25.76)':
+  '@ai-sdk/gateway@1.0.6(zod@4.0.17)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.3(zod@3.25.76)
-      zod: 3.25.76
+      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.17)
+      zod: 4.0.17
 
-  '@ai-sdk/provider-utils@3.0.3(zod@3.25.76)':
+  '@ai-sdk/provider-utils@3.0.3(zod@4.0.17)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
       eventsource-parser: 3.0.3
-      zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod: 4.0.17
+      zod-to-json-schema: 3.24.6(zod@4.0.17)
 
   '@ai-sdk/provider@2.0.0':
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@2.0.13(react@19.1.0)(zod@3.25.76)':
+  '@ai-sdk/react@2.0.13(react@19.1.0)(zod@4.0.17)':
     dependencies:
-      '@ai-sdk/provider-utils': 3.0.3(zod@3.25.76)
-      ai: 5.0.13(zod@3.25.76)
+      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.17)
+      ai: 5.0.13(zod@4.0.17)
       react: 19.1.0
       swr: 2.3.6(react@19.1.0)
       throttleit: 2.1.0
     optionalDependencies:
-      zod: 3.25.76
+      zod: 4.0.17
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -3769,13 +3777,13 @@ snapshots:
 
   acorn@8.15.0: {}
 
-  ai@5.0.13(zod@3.25.76):
+  ai@5.0.13(zod@4.0.17):
     dependencies:
-      '@ai-sdk/gateway': 1.0.6(zod@3.25.76)
+      '@ai-sdk/gateway': 1.0.6(zod@4.0.17)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.3(zod@3.25.76)
+      '@ai-sdk/provider-utils': 3.0.3(zod@4.0.17)
       '@opentelemetry/api': 1.9.0
-      zod: 3.25.76
+      zod: 4.0.17
 
   ajv@6.12.6:
     dependencies:
@@ -3891,6 +3899,10 @@ snapshots:
   braces@3.0.3:
     dependencies:
       fill-range: 7.1.1
+
+  browser-use-sdk@0.1.1(zod@4.0.17):
+    dependencies:
+      zod: 4.0.17
 
   call-bind-apply-helpers@1.0.2:
     dependencies:
@@ -6110,10 +6122,10 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zod-to-json-schema@3.24.6(zod@3.25.76):
+  zod-to-json-schema@3.24.6(zod@4.0.17):
     dependencies:
-      zod: 3.25.76
+      zod: 4.0.17
 
-  zod@3.25.76: {}
+  zod@4.0.17: {}
 
   zwitch@2.0.4: {}
