@@ -26,10 +26,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <div className="fixed inset-0 w-full h-full flex flex-col items-center justify-center">
-          <div className="absolute inset-0 w-full max-w-5xl mx-auto h-full border-l border-r border-dashed border-gray-400"></div>
+          <div className="absolute inset-0 w-full max-w-11/12 md:max-w-5xl mx-auto h-full border-l border-r border-dashed border-gray-400"></div>
 
           <div className="z-1 w-full border-t border-b border-dashed border-gray-400">
-            <div className="max-w-5xl mx-auto h-[640px]">{children}</div>
+            <div className="max-w-11/12 md:max-w-5xl mx-auto h-[calc(100vh-4rem)] md:h-[640px]">{children}</div>
           </div>
         </div>
       </body>

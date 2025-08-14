@@ -85,21 +85,21 @@ export default function Home() {
   }, [messages]);
 
   return (
-    <div className="w-full h-full grid grid-cols-2">
-      <div className="col-span-1">
-        <div className="w-full h-full border-r border-dashed border-gray-400">
+    <div className="w-full h-full grid grid-cols-1 grid-rows-2 md:grid-cols-2 md:grid-rows-1">
+      <div className="col-span-1 row-span-1">
+        <div className="w-full h-full border-b md:border-b-0 md:border-r border-dashed border-gray-400">
           {/* Placeholder */}
-          <div className="w-full h-full flex items-center justify-center p-1">
+          <div className="w-full h-full flex items-center justify-center">
             {liveUrl != null ? (
-              <iframe src={liveUrl} className="w-full h-full border border-dashed border-gray-400" />
+              <iframe src={liveUrl} className="w-full h-full border border-transparent" />
             ) : (
               <Image src="/browseruse.svg" alt="logo" width={40} height={40} className="size-16 object-contain" />
             )}
           </div>
         </div>
       </div>
-      <div className="col-span-1 h-full flex flex-col overflow-hidden">
-        <Conversation className="flex-1 overflow-hidden">
+      <div className="col-span-1 row-span-1 h-full flex flex-col overflow-hidden">
+        <Conversation className="flex-1 overflow-hidden border-r border-transparent">
           <ConversationContent>
             {messages.map((message) => (
               <Message key={message.id} from={message.role}>
@@ -125,7 +125,7 @@ export default function Home() {
                               isStreaming={status === "streaming"}
                             >
                               <ReasoningTrigger />
-                              <ReasoningContent>Starting task...</ReasoningContent>
+                              <ReasoningContent>Starting browser...</ReasoningContent>
                             </Reasoning>
                           );
                         }
@@ -135,7 +135,11 @@ export default function Home() {
                         }
 
                         return (
-                          <Reasoning key={`${message.id}-${i}`} className="w-full" isStreaming={status === "streaming"}>
+                          <Reasoning
+                            key={`${message.id}-${i}`}
+                            className="w-full mb-0"
+                            isStreaming={status === "streaming"}
+                          >
                             <ReasoningTrigger />
                             <ReasoningContent>{part.output.lastStep.nextGoal}</ReasoningContent>
                           </Reasoning>
