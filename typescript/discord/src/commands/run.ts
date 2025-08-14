@@ -1,5 +1,5 @@
 import { BrowserUse } from "browser-use-sdk";
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 
 import { ExhaustiveSwitchCheck } from "../lib/types";
 import type { Command } from "./types";
@@ -24,169 +24,100 @@ export const run: Command = {
 
     const tick: { current: number } = { current: 0 };
 
-    const state: { current: BrowserState } = { current: null };
+    const task = await browseruse.tasks.create({
+      task: command,
+      agentSettings: {
+        llm: "o3",
+      },
+    });
+
+    const embed = new EmbedBuilder()
+      .setTitle("🤖 Browser Use Task")
+      .setDescription(`**Command:** ${command}\n**Task ID:** ${task.id}`)
+      .setColor(0x0099ff)
+      .addFields(
+        { name: "Status", value: "🔄 Starting...", inline: true },
+        { name: "Live Session", value: "⏳ Waiting...", inline: true },
+      )
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
 
     poll: do {
       tick.current++;
 
-      let status: BrowserUse.TaskView;
+      const status = (await browseruse.tasks.retrieve(task.id)) as BrowserUse.TaskView;
 
-      // NOTE: We take action on each tick.
-      if (state.current == null) {
-        status = await browseruse.tasks.create({
-          task: command,
-          agentSettings: {
-            llm: "o3",
-          },
-        });
-      } else {
-        status = (await browseruse.tasks.retrieve(state.current.taskId)) as BrowserUse.TaskView;
-      }
+      switch (status.status) {
+        case "started":
+        case "stopped":
+        case "paused": {
+          const liveUrl = status.sessionLiveUrl ?? "⏳ Waiting...";
 
-      const [newState, events] = reducer(state.current, { kind: "status", status });
+          const description: string[] = [];
 
-      for (const event of events) {
-        switch (event.kind) {
-          case "task_started":
-            interaction.reply(`Browser Use Task started (${event.taskId})`);
-            break;
-          case "session_live_url_ready":
-            interaction.followUp(`Watch live Browser Use session at ${event.liveUrl}`);
-            break;
-          case "task_step_completed":
-            interaction.followUp(`[${event.step.url}] ${event.step.nextGoal}`);
-            break;
-          case "task_completed":
-            interaction.followUp(event.output);
-            break poll;
-          default:
-            throw new ExhaustiveSwitchCheck(event);
+          description.push(`**Command:** ${command}`);
+          description.push(`**Task ID:** ${task.id}`);
+
+          description.push("");
+
+          if (status.steps) {
+            for (const step of status.steps) {
+              description.push(`- [${step.url}] ${step.nextGoal}`);
+            }
+          } else {
+            description.push("No steps yet");
+          }
+
+          if (status.doneOutput) {
+            description.push("");
+            description.push(status.doneOutput);
+          }
+
+          const embed = new EmbedBuilder()
+            .setTitle("🤖 Browser Use Task")
+            .setDescription(description.join("\n"))
+            .setColor(0x0099ff)
+            .addFields(
+              { name: "Status", value: "🔄 Running...", inline: true },
+              { name: "Live Session", value: liveUrl, inline: true },
+            )
+            .setTimestamp();
+
+          await interaction.editReply({ embeds: [embed] });
+
+          break;
         }
-      }
 
-      state.current = newState;
+        case "finished": {
+          const output: string[] = [];
+
+          output.push(`# Browser Use Task - ${task.id} ✅`);
+          output.push(`## Task`);
+          output.push(command);
+
+          output.push("");
+
+          output.push(`## Output`);
+          output.push(status.doneOutput);
+
+          await interaction.editReply({ content: output.join("\n"), embeds: [] });
+
+          break poll;
+        }
+        default:
+          throw new ExhaustiveSwitchCheck(status.status);
+      }
 
       // LOGS
 
-      if (state.current != null) {
-        console.log(`${state.current.taskId} | [${tick.current}] ${status.status} `.padEnd(100, "-"));
-        for (const event of events) {
-          console.log(`${state.current.taskId} | - ${event.kind}`);
-        }
-      } else {
-        // NOTE: This should never happen!
-        throw new Error("Task unexpectedly got negative status update...");
-      }
+      console.log(`[${status.id}] (${tick.current}) ${status.status}`);
 
       // TIMER
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } while (true);
 
-    if (state.current == null) {
-      console.log(`TASK NOT STARTED`);
-    } else {
-      console.log(`${state.current.taskId} | [${tick.current}] DONE `.padEnd(100, "-"));
-    }
+    console.log("done");
   },
 };
-
-// Event Loop ----------------------------------------------------------------
-
-type BrowserState = {
-  taskId: string;
-  sessionId: string;
-
-  liveSessionUrl: string | null;
-
-  steps: BrowserUse.TaskView.Step[];
-
-  output: string | null;
-} | null;
-
-type BrowserAction = {
-  kind: "status";
-  status: BrowserUse.TaskView;
-};
-
-type ReducerEvent =
-  | {
-      kind: "task_started";
-      taskId: string;
-      sessionId: string;
-    }
-  | {
-      kind: "session_live_url_ready";
-      liveUrl: string;
-    }
-  | {
-      kind: "task_step_completed";
-      step: BrowserUse.TaskView.Step;
-    }
-  | {
-      kind: "task_completed";
-      output: string;
-    };
-
-function reducer(state: BrowserState, action: BrowserAction): [BrowserState, Array<ReducerEvent>] {
-  switch (action.kind) {
-    case "status": {
-      if (state == null) {
-        const liveUrl = action.status.sessionLiveUrl ?? null;
-
-        const state: BrowserState = {
-          taskId: action.status.id,
-          sessionId: action.status.sessionId,
-          liveSessionUrl: liveUrl,
-          steps: [],
-          output: null,
-        };
-
-        const events: Array<ReducerEvent> = [
-          { kind: "task_started", taskId: action.status.id, sessionId: action.status.sessionId },
-        ];
-
-        if (liveUrl != null) {
-          events.push({ kind: "session_live_url_ready", liveUrl });
-        }
-
-        return [state, events];
-      }
-
-      const events: Array<ReducerEvent> = [];
-
-      const liveUrl = action.status.sessionLiveUrl ?? null;
-
-      if (state.liveSessionUrl == null && liveUrl != null) {
-        events.push({ kind: "session_live_url_ready", liveUrl });
-      }
-
-      const steps = state.steps;
-      if (action.status.steps != null) {
-        const newSteps = action.status.steps.slice(state.steps.length);
-
-        for (const step of newSteps) {
-          steps.push(step);
-          events.push({ kind: "task_step_completed", step });
-        }
-      }
-
-      const output = action.status.doneOutput && action.status.doneOutput.length > 0 ? action.status.doneOutput : null;
-
-      if (state.output == null && output != null) {
-        events.push({ kind: "task_completed", output });
-      }
-
-      const newState: BrowserState = {
-        ...state,
-        liveSessionUrl: liveUrl,
-        steps: steps,
-        output: output,
-      };
-
-      return [newState, events];
-    }
-    default:
-      throw new ExhaustiveSwitchCheck(action.kind);
-  }
-}
