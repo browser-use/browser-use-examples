@@ -72,14 +72,22 @@ export default function Home() {
   const liveUrl = useMemo(() => {
     let url: string | undefined = undefined;
 
-    for (const message of messages) {
-      for (const part of message.parts) {
-        if (part.type === "tool-runTask" && part.output != null) {
-          const output = part.output;
+    if (messages.length === 0) {
+      return undefined;
+    }
 
-          if (output.liveUrl != null) {
-            url = output.liveUrl;
-          }
+    const lastMessage = messages[messages.length - 1];
+
+    if (lastMessage.role === "user") {
+      return undefined;
+    }
+
+    for (const part of lastMessage.parts) {
+      if (part.type === "tool-runTask" && part.output != null) {
+        const output = part.output;
+
+        if (output.liveUrl != null) {
+          url = output.liveUrl;
         }
       }
     }
@@ -116,6 +124,7 @@ export default function Home() {
                     switch (part.type) {
                       case "text":
                         return <Response key={`${message.id}-${i}`}>{part.text}</Response>;
+
                       case "reasoning":
                         return (
                           <Reasoning key={`${message.id}-${i}`} className="w-full" isStreaming={status === "streaming"}>
@@ -123,9 +132,9 @@ export default function Home() {
                             <ReasoningContent>{part.text}</ReasoningContent>
                           </Reasoning>
                         );
-                      case "tool-continueTask":
+
                       case "tool-runTask": {
-                        if (part.output == null) {
+                        if (part.output == null || part.output.status === "starting") {
                           return (
                             <Reasoning
                               key={`${message.id}-${i}`}

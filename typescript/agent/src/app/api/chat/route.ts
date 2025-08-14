@@ -20,6 +20,10 @@ const bu = new BrowserUse({
 
 type TaskStatus =
   | {
+      status: "starting";
+      liveUrl: string | null;
+    }
+  | {
       status: "running";
 
       lastStep: BrowserUse.Tasks.TaskView.Step;
@@ -40,73 +44,32 @@ const tools = {
     inputSchema: z.object({
       task: z.string(),
     }),
-    async *execute({ task }) {
+    async *execute({ task }, { abortSignal }) {
       // Create Task
       const rsp = await bu.tasks.create({ task: task });
 
+      console.log(`[agent] Task created: ${rsp.id}`);
+
       poll: do {
         // Wait for Task to Finish
-        const status = (await bu.tasks.retrieve(rsp.id, { statusOnly: false })) as BrowserUse.Tasks.TaskView;
+        const status = (await bu.tasks.retrieve(
+          rsp.id,
+          { statusOnly: false },
+          { signal: abortSignal },
+        )) as BrowserUse.Tasks.TaskView;
+
+        console.log(`[agent] task status: ${status.status}`);
 
         switch (status.status) {
           case "started":
           case "paused":
           case "stopped":
             if (status.steps == null || status.steps.length === 0) {
-              break;
-            }
+              yield {
+                status: "starting",
+                liveUrl: status.sessionLiveUrl ? status.sessionLiveUrl : null,
+              } satisfies TaskStatus;
 
-            const lastStep = status.steps[status.steps.length - 1];
-
-            yield {
-              status: "running",
-              lastStep: lastStep,
-              liveUrl: status.sessionLiveUrl ? status.sessionLiveUrl : null,
-            } satisfies TaskStatus;
-
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-
-            break;
-
-          case "finished":
-            if (status.sessionLiveUrl == null) {
-              break;
-            }
-
-            yield {
-              status: "done",
-              output: status.doneOutput,
-              liveUrl: status.sessionLiveUrl,
-              sessionId: status.sessionId,
-            } satisfies TaskStatus;
-
-            break poll;
-
-          default:
-            throw new Error(`Unknown status: ${status.status}`);
-        }
-      } while (true);
-    },
-  }),
-  continueTask: tool({
-    description: "Continue a task in a web browser.",
-    inputSchema: z.object({
-      sessionId: z.string(),
-      task: z.string(),
-    }),
-    async *execute({ sessionId, task }) {
-      // Create Task
-      const rsp = await bu.tasks.create({ task: task, browserSettings: { sessionId: sessionId } });
-
-      poll: do {
-        // Wait for Task to Finish
-        const status = (await bu.tasks.retrieve(rsp.id, { statusOnly: false })) as BrowserUse.Tasks.TaskView;
-
-        switch (status.status) {
-          case "started":
-          case "paused":
-          case "stopped":
-            if (status.steps == null || status.steps.length === 0) {
               break;
             }
 
