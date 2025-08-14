@@ -23,6 +23,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { ChatMessage } from "@/app/api/chat/route";
+import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 
 const MODELS = [
   {
@@ -33,6 +34,12 @@ const MODELS = [
     name: "Deepseek R1",
     value: "deepseek/deepseek-r1",
   },
+];
+
+const SUGGESTIONS = [
+  "Find top 5 places to visit in Ljubljana, Slovenia",
+  "Extract top 10 Hacker News articles",
+  "Get latest NBA scores",
 ];
 
 export default function Home() {
@@ -48,18 +55,18 @@ export default function Home() {
     (e: React.FormEvent) => {
       e.preventDefault();
       if (input.trim()) {
-        sendMessage(
-          { text: input },
-          {
-            body: {
-              model: model,
-            },
-          },
-        );
+        sendMessage({ text: input }, { body: { model: model } });
         setInput("");
       }
     },
     [input, model, sendMessage],
+  );
+
+  const handleSuggestionClick = useCallback(
+    (suggestion: string) => {
+      sendMessage({ text: suggestion }, { body: { model: model } });
+    },
+    [sendMessage, model],
   );
 
   const liveUrl = useMemo(() => {
@@ -81,6 +88,7 @@ export default function Home() {
   }, [messages]);
 
   useEffect(() => {
+    // DEBUG
     console.log(messages);
   }, [messages]);
 
@@ -160,9 +168,24 @@ export default function Home() {
         </Conversation>
 
         {/* Input */}
+        {messages.length === 0 && (
+          <div className="flex-none w-full mb-2 border border-transparent">
+            <Suggestions className="px-2">
+              {SUGGESTIONS.map((suggestion) => (
+                <Suggestion key={suggestion} onClick={handleSuggestionClick} suggestion={suggestion} />
+              ))}
+            </Suggestions>
+          </div>
+        )}
+
         <div className="flex-none p-2 pt-0">
           <PromptInput onSubmit={handleSubmit}>
-            <PromptInputTextarea onChange={(e) => setInput(e.target.value)} value={input} />
+            <PromptInputTextarea
+              onChange={(e) => setInput(e.target.value)}
+              value={input}
+              placeholder="Automate the web..."
+              rows={2}
+            />
             <PromptInputToolbar>
               <PromptInputTools>
                 <PromptInputModelSelect
