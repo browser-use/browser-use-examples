@@ -54,12 +54,17 @@ export default function Home() {
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
+
+      if (status === "streaming" || status === "submitted") {
+        return;
+      }
+
       if (input.trim()) {
         sendMessage({ text: input }, { body: { model: model } });
         setInput("");
       }
     },
-    [input, model, sendMessage],
+    [input, model, sendMessage, status],
   );
 
   const handleSuggestionClick = useCallback(
@@ -215,7 +220,11 @@ export default function Home() {
                   </PromptInputModelSelectContent>
                 </PromptInputModelSelect>
               </PromptInputTools>
-              <PromptInputSubmit disabled={!input} status={status} />
+
+              <PromptInputSubmit
+                disabled={!input || status === "streaming" || status === "submitted"}
+                status={status}
+              />
             </PromptInputToolbar>
           </PromptInput>
         </div>
