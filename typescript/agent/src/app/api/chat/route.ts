@@ -26,7 +26,7 @@ type TaskStatus =
   | {
       status: "running";
 
-      lastStep: BrowserUse.Tasks.TaskView.Step;
+      lastStep: BrowserUse.Tasks.TaskStepView;
       liveUrl: string | null;
     }
   | {
@@ -46,19 +46,19 @@ const tools = {
     }),
     async *execute({ task }, { abortSignal }) {
       // Create Task
-      const rsp = await bu.tasks.create({ task: task });
 
-      console.log(`[agent] Task created: ${rsp.id}`);
+      const res = await bu.tasks.create({ task }, { signal: abortSignal });
 
-      poll: do {
-        // Wait for Task to Finish
-        const status = (await bu.tasks.retrieve(
-          rsp.id,
-          { statusOnly: false },
-          { signal: abortSignal },
-        )) as BrowserUse.Tasks.TaskView;
+      const gen = bu.tasks.stream(res.id, { signal: abortSignal });
+
+      for await (const event of gen) {
+        const status = event.data;
 
         console.log(`[agent] task status: ${status.status}`);
+
+        if (status.doneOutput) {
+          console.log(`[agent] task output: ${status.doneOutput}`);
+        }
 
         switch (status.status) {
           case "started":
@@ -81,12 +81,10 @@ const tools = {
               liveUrl: status.sessionLiveUrl ? status.sessionLiveUrl : null,
             } satisfies TaskStatus;
 
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-
             break;
 
           case "finished":
-            if (status.sessionLiveUrl == null) {
+            if (status.sessionLiveUrl == null || status.doneOutput == null) {
               break;
             }
 
@@ -97,12 +95,12 @@ const tools = {
               sessionId: status.sessionId,
             } satisfies TaskStatus;
 
-            break poll;
+            break;
 
           default:
             throw new Error(`Unknown status: ${status.status}`);
         }
-      } while (true);
+      }
     },
   }),
 } satisfies ToolSet;

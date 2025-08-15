@@ -22,31 +22,19 @@ export const run: Command = {
       return;
     }
 
-    const tick: { current: number } = { current: 0 };
+    await interaction.reply("Browser Use on the job!");
 
-    const task = await browseruse.tasks.create({
+    const res = await browseruse.tasks.create({
       task: command,
       agentSettings: {
         llm: "o3",
       },
     });
 
-    const embed = new EmbedBuilder()
-      .setTitle("🤖 Browser Use Task")
-      .setDescription(`**Command:** ${command}\n**Task ID:** ${task.id}`)
-      .setColor(0x0099ff)
-      .addFields(
-        { name: "Status", value: "🔄 Starting...", inline: true },
-        { name: "Live Session", value: "⏳ Waiting...", inline: true },
-      )
-      .setTimestamp();
+    const gen = browseruse.tasks.stream(res.id);
 
-    await interaction.reply({ embeds: [embed] });
-
-    poll: do {
-      tick.current++;
-
-      const status = (await browseruse.tasks.retrieve(task.id)) as BrowserUse.TaskView;
+    for await (const event of gen) {
+      const status = event.data;
 
       switch (status.status) {
         case "started":
@@ -57,7 +45,7 @@ export const run: Command = {
           const description: string[] = [];
 
           description.push(`**Command:** ${command}`);
-          description.push(`**Task ID:** ${task.id}`);
+          description.push(`**Task ID:** ${status.id}`);
 
           description.push("");
 
@@ -92,32 +80,24 @@ export const run: Command = {
         case "finished": {
           const output: string[] = [];
 
-          output.push(`# Browser Use Task - ${task.id} ✅`);
+          output.push(`# Browser Use Task - ${status.id} ✅`);
           output.push(`## Task`);
           output.push(command);
 
           output.push("");
 
           output.push(`## Output`);
-          output.push(status.doneOutput);
+          output.push(status.doneOutput ?? "No output");
 
           await interaction.editReply({ content: output.join("\n"), embeds: [] });
 
-          break poll;
+          break;
         }
         default:
           throw new ExhaustiveSwitchCheck(status.status);
       }
 
-      // LOGS
-
-      console.log(`[${status.id}] (${tick.current}) ${status.status}`);
-
-      // TIMER
-
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    } while (true);
-
-    console.log("done");
+      console.log(`[${status.id}] ${status.status}`);
+    }
   },
 };

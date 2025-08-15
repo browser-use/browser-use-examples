@@ -42,8 +42,8 @@ importers:
         specifier: ^5.0.13
         version: 5.0.13(zod@4.0.17)
       browser-use-sdk:
-        specifier: 0.1.1
-        version: 0.1.1(zod@4.0.17)
+        specifier: 0.3.0
+        version: 0.3.0(zod@4.0.17)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1226,8 +1226,8 @@ packages:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
 
-  browser-use-sdk@0.1.1:
-    resolution: {integrity: sha512-/uwjVZqsix9YlJvHGmX902hBrcFHWP7YoL0++/25enUTAqNeQ8uEFyNJXa3PjPYV4JBRgoaQXUG9GTB0XJesEw==}
+  browser-use-sdk@0.3.0:
+    resolution: {integrity: sha512-rXOtRD3LOWRfjdJtAUQsmGb4hB0ihsW8JWwL1MLedL/BzwESKoKOi+C+0ihSwsPER1LxoGGbXfix4eOaX4p4IQ==}
     peerDependencies:
       zod: ^4.0.17
 
@@ -3900,7 +3900,7 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
-  browser-use-sdk@0.1.1(zod@4.0.17):
+  browser-use-sdk@0.3.0(zod@4.0.17):
     dependencies:
       zod: 4.0.17
 
