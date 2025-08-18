@@ -3,7 +3,7 @@ import logging
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from slack_sdk.signature import SignatureVerifier
-from app.service import SlackService
+from service import SlackService
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

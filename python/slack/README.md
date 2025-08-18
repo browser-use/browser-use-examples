@@ -1,5 +1,13 @@
 # Slack Example
 
+Dev setup:
+
+```bash
+uv sync
+```
+
+Slack requires a HTTPS endpoint for its events. For local development, you have to use a service like `ngrok` to get your uvicorn server a public IP and a HTTPS endpoint.
+
 The following Slack scopes are required for this application:
 
 - `app_mentions:read` - View messages that directly mention @Browser-use in conversations that the app is in
