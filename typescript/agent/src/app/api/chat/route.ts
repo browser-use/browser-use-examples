@@ -12,7 +12,7 @@ import { z } from "zod";
 import { BrowserUse } from "browser-use-sdk";
 
 // Allow streaming responses up to 5 minutes
-export const maxDuration = 300;
+export const maxDuration = 15 * 60;
 
 const bu = new BrowserUse({
   apiKey: process.env.BROWSER_USE_API_KEY,
