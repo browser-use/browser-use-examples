@@ -1,7 +1,7 @@
-import type { ChatInputCommandInteraction, SharedSlashCommand } from "discord.js";
+import type { ChatInputCommandInteraction, Interaction, SharedSlashCommand } from "discord.js";
 
 export type Command = {
   data: SharedSlashCommand;
 
-  execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+  execute: (interaction: Interaction & { commandName: string }) => Promise<void>;
 };

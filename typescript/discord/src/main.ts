@@ -1,5 +1,6 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
 import { registry } from "./commands";
+import { Command } from "./commands/types";
 
 // Environment ---------------------------------------------------------------
 
@@ -20,7 +21,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     return;
   }
 
-  const command = registry[interaction.commandName];
+  const command = (registry as Record<string, Command>)[interaction.commandName];
 
   if (!command) {
     console.error(`No command "${interaction.commandName}" was found...`);

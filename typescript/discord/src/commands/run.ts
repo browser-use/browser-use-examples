@@ -15,6 +15,10 @@ export const run: Command = {
     .addStringOption((option) => option.setName("command").setDescription("The command to run").setRequired(true)),
 
   async execute(interaction) {
+    if (!interaction.isChatInputCommand()) {
+      return;
+    }
+
     const command = interaction.options.getString("command");
 
     if (command == null) {
@@ -40,7 +44,7 @@ export const run: Command = {
         case "started":
         case "stopped":
         case "paused": {
-          const liveUrl = status.sessionLiveUrl ?? "⏳ Waiting...";
+          const liveUrl = status.session.liveUrl ?? "⏳ Waiting...";
 
           const description: string[] = [];
 

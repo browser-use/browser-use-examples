@@ -67,7 +67,7 @@ const tools = {
             if (status.steps == null || status.steps.length === 0) {
               yield {
                 status: "starting",
-                liveUrl: status.sessionLiveUrl ? status.sessionLiveUrl : null,
+                liveUrl: status.session.liveUrl ? status.session.liveUrl : null,
               } satisfies TaskStatus;
 
               break;
@@ -78,20 +78,20 @@ const tools = {
             yield {
               status: "running",
               lastStep: lastStep,
-              liveUrl: status.sessionLiveUrl ? status.sessionLiveUrl : null,
+              liveUrl: status.session.liveUrl ? status.session.liveUrl : null,
             } satisfies TaskStatus;
 
             break;
 
           case "finished":
-            if (status.sessionLiveUrl == null || status.doneOutput == null) {
+            if (status.session.liveUrl == null || status.doneOutput == null) {
               break;
             }
 
             yield {
               status: "done",
               output: status.doneOutput,
-              liveUrl: status.sessionLiveUrl,
+              liveUrl: status.session.liveUrl,
               sessionId: status.sessionId,
             } satisfies TaskStatus;
 
