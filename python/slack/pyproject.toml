@@ -1,0 +1,14 @@
+[project]
+name = "slack"
+version = "0.1.0"
+description = "slack-example"
+readme = "README.md"
+requires-python = ">=3.9.18"
+dependencies = [
+    "aiohttp>=3.12.15",
+    "browser-use-sdk>=0.0.2",
+    "fastapi>=0.116.1",
+    "pydantic>=2.11.7",
+    "slack-sdk>=3.36.0",
+    "uvicorn>=0.35.0",
+]
