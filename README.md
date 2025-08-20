@@ -1,3 +1,5 @@
+<img src="./assets/cloud-banner-examples.png" alt="Browser Use Examples" width="full"/>
+
 # 🤖 Browser Use Examples
 
 > A collection of Browser Use SDK examples.
