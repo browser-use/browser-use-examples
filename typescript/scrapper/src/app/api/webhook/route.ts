@@ -54,7 +54,7 @@ export async function POST(request: Request) {
           throw new Error(`Task ${task_id} not found on BrowserUse Cloud!`);
         }
 
-        const payload = buTask.doneOutput;
+        const payload = buTask.parsedOutput;
 
         if (!payload) {
           throw new Error(`Task ${task_id} has no output!`);

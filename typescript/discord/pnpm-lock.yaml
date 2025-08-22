@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       browser-use-sdk:
-        specifier: 0.6.0
-        version: 0.6.0(zod@4.0.17)
+        specifier: 1.2.0
+        version: 1.2.0(react@19.1.1)(zod@4.0.17)
       discord.js:
         specifier: 14.21.0
         version: 14.21.0
@@ -272,11 +272,12 @@ packages:
     resolution: {integrity: sha512-02qvAaxv8tp7fBa/mw1ga98OGm+eCbqzJOKoRt70sLmfEEi+jyBYVTDGfCL/k06/4EMk/z01gCe7HoCH/f2LTg==}
     engines: {node: '>=18'}
 
-  browser-use-sdk@0.6.0:
-    resolution: {integrity: sha512-0+bemaKzNNRirGVy/3w/LdjM7PjqVcHwzpbn7z4jFjocNixDeNODBev72tNwIlET3NvAttPRhq2UUgVFhJcHxA==}
+  browser-use-sdk@1.2.0:
+    resolution: {integrity: sha512-6wPMbmpP8WEliVbqGzWzwHkqfk1daVoBprNpBA1sOFNJ6Y7HPDXFpJe5kxMiVPOCEq8z/gMlYKZ2uBR3POj3lQ==}
     hasBin: true
     peerDependencies:
-      zod: ^4.0.17
+      react: ^18 || ^19
+      zod: ^4
 
   bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
@@ -586,6 +587,10 @@ packages:
   raw-body@3.0.0:
     resolution: {integrity: sha512-RmkhL8CAyCRPXCE28MMH0z2PNWQBNk2Q09ZdxM9IOOXwxwZbN+qbWaatPkdkWIKL2ZVDImrN/pK5HTRz2PcS4g==}
     engines: {node: '>= 0.8'}
+
+  react@19.1.1:
+    resolution: {integrity: sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ==}
+    engines: {node: '>=0.10.0'}
 
   resolve-pkg-maps@1.0.0:
     resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
@@ -906,10 +911,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  browser-use-sdk@0.6.0(zod@4.0.17):
+  browser-use-sdk@1.2.0(react@19.1.1)(zod@4.0.17):
     dependencies:
       '@dotenvx/dotenvx': 1.48.4
       fast-json-stable-stringify: 2.1.0
+      react: 19.1.1
       zod: 4.0.17
 
   bytes@3.1.2: {}
@@ -1234,6 +1240,8 @@ snapshots:
       http-errors: 2.0.0
       iconv-lite: 0.6.3
       unpipe: 1.0.0
+
+  react@19.1.1: {}
 
   resolve-pkg-maps@1.0.0: {}
 

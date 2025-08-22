@@ -1,9 +1,10 @@
+import { gtos } from "browser-use-sdk/lib/nextjs/server/utils";
+import { eq } from "drizzle-orm";
+
 import * as schema from "@/db/schema";
 import { db } from "@/lib/db";
-import { gtos } from "@/lib/next";
 import { zScrapperSchema } from "@/lib/prompt";
 import { browseruse } from "@/lib/sdk";
-import { eq } from "drizzle-orm";
 
 export async function GET(
   request: Request,

@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
   const task = await browseruse.tasks.create({
     task: getAgentPrompt(name),
-    structuredOutputJson: zScrapperSchema,
+    schema: zScrapperSchema,
   });
 
   const [entry] = await db

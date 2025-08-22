@@ -1,9 +1,9 @@
 "use client";
 
+import { useBrowserUse } from "browser-use-sdk/lib/nextjs/hooks/useBrowserUse";
 import { TaskViewWithSchema } from "browser-use-sdk/lib/parse.mjs";
 import { useParams } from "next/navigation";
 
-import { useBrowserUse } from "@/hooks/useBrowserUse";
 import { ScrapperSchemaZod } from "@/lib/prompt";
 
 export default function LivePage() {
