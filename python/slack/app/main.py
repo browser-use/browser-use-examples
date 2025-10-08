@@ -4,6 +4,9 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from slack_sdk.signature import SignatureVerifier
 from service import SlackService
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -22,13 +25,17 @@ async def slack_events(request: Request):
                 status_code=500, detail="Environment variables not configured"
             )
 
+        # Read body once and use it for both verification and parsing
+        body = await request.body()
+
         if not SignatureVerifier(signing_secret).is_valid_request(
-            await request.body(), dict(request.headers)
+            body, dict(request.headers)
         ):
             logger.warning("Request verification failed")
             raise HTTPException(status_code=400, detail="Request verification failed")
 
-        event_data = await request.json()
+        import json
+        event_data = json.loads(body)
         if "challenge" in event_data:
             return {"challenge": event_data["challenge"]}
 
