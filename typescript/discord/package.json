@@ -15,7 +15,8 @@
   "dependencies": {
     "browser-use-sdk": "1.2.0",
     "discord.js": "14.21.0",
-    "express": "5.1.0"
+    "express": "5.1.0",
+    "pnpm": "^10.18.1"
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "1.48.4",

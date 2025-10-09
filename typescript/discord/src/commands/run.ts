@@ -38,13 +38,13 @@ export const run: Command = {
     const gen = browseruse.tasks.stream(res.id);
 
     for await (const event of gen) {
-      const status = event.data;
+      const status = event.data as typeof event.data & { output?: string };
 
       switch (status.status) {
         case "started":
         case "stopped":
         case "paused": {
-          const liveUrl = status.session.liveUrl ?? "⏳ Waiting...";
+          const liveUrl = status.session?.liveUrl ?? "⏳ Waiting...";
 
           const description: string[] = [];
 
@@ -61,9 +61,9 @@ export const run: Command = {
             description.push("No steps yet");
           }
 
-          if (status.doneOutput) {
+          if (status.output) {
             description.push("");
-            description.push(status.doneOutput);
+            description.push(status.output);
           }
 
           const embed = new EmbedBuilder()
@@ -91,7 +91,7 @@ export const run: Command = {
           output.push("");
 
           output.push(`## Output`);
-          output.push(status.doneOutput ?? "No output");
+          output.push(status.output ?? "No output");
 
           await interaction.editReply({ content: output.join("\n"), embeds: [] });
 
