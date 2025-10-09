@@ -8,4 +8,5 @@ dependencies = [
     "uvicorn>=0.32.0",
     "slack-sdk>=3.33.0",
     "python-dotenv>=1.0.0",
+    "aiohttp>=3.9.0",
 ]
