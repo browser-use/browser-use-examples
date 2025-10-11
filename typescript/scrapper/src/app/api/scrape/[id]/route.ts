@@ -30,7 +30,33 @@ export async function GET(
     schema: zScrapperSchema,
   });
 
-  const stream = gtos(gen, {});
+  // Wrap generator to fetch session data and add liveUrl
+  async function* enrichWithLiveUrl() {
+    for await (const event of gen) {
+      const status = event.data;
+
+      // Fetch session to get liveUrl (like agent example)
+      if (status.sessionId) {
+        try {
+          const session = await browseruse.sessions.retrieve(status.sessionId);
+          // Add session data to the event
+          event.data.session = {
+            id: session.id,
+            status: session.status,
+            startedAt: session.startedAt,
+            finishedAt: session.finishedAt ?? null,
+            liveUrl: session.liveUrl ?? null,
+          };
+        } catch (err) {
+          console.error('[scrapper] Failed to fetch session:', err);
+        }
+      }
+
+      yield event;
+    }
+  }
+
+  const stream = gtos(enrichWithLiveUrl(), {});
 
   return new Response(stream, {
     headers: {
