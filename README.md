@@ -4,10 +4,6 @@
 
 > A collection of Browser Use SDK examples.
 
-### Run examples continuously
-
-- **[Browser Use Box](https://browser-use.com/bux)**: Run Browser Use SDK examples on an always-on Linux box with Browser Use Cloud, a persistent browser profile, Telegram control, and scheduling. See the [self-hosted repo](https://github.com/browser-use/bux) or watch the [15-second demo](https://www.tiktok.com/@browser_use/video/7639824093721758989).
-
 ### TypeScript
 
 - **[scrapper](./scrapper/README.md)**: A utility for extracting complex, scattered data about entities, saving results to a database, and providing live previews of scraping progress.
