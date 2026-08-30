@@ -17,6 +17,9 @@ importers:
       express:
         specifier: 5.1.0
         version: 5.1.0
+      pnpm:
+        specifier: ^10.18.1
+        version: 10.18.1
     devDependencies:
       '@dotenvx/dotenvx':
         specifier: 1.48.4
@@ -566,6 +569,11 @@ packages:
   picomatch@4.0.3:
     resolution: {integrity: sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==}
     engines: {node: '>=12'}
+
+  pnpm@10.18.1:
+    resolution: {integrity: sha512-d6iEoWXLui2NHBnjtIgO7m0vyr0Nh5Eh4oIZa4AEI1HV6zygk1+lmdodxRJlzGiBatK93Sot5eqf35KtvsfNNA==}
+    engines: {node: '>=18.12'}
+    hasBin: true
 
   prettier@3.6.2:
     resolution: {integrity: sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==}
@@ -1220,6 +1228,8 @@ snapshots:
   path-to-regexp@8.2.0: {}
 
   picomatch@4.0.3: {}
+
+  pnpm@10.18.1: {}
 
   prettier@3.6.2: {}
 

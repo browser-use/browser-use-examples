@@ -3,7 +3,7 @@ import asyncio
 from typing import Optional
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
-from browser_use import BrowserUse
+from browser_use_sdk import BrowserUse
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -93,19 +93,22 @@ class SlackService:
                 return
 
             # Start the agent task using internal service
-            task_result = await self.client.tasks.create(task=task)
+            task_result = self.client.tasks.create_task(task=task)
 
-            if not task_result.session_id:
+            # Get the full task details to access session_id
+            task_view = self.client.tasks.get_task(task_result.id)
+
+            if not task_view.session_id:
                 # Error starting task
-                error_message = f"Error: {task_result.message}"
+                error_message = "Error: Could not retrieve session ID"
                 await self.update_message(channel_id, message_ts, error_message)
                 return
 
-            share_url = await self.client.sessions.retrieve(task_result.session_id)
+            share_url = self.client.sessions.create_session_public_share(task_view.session_id)
 
             # Create final message with share link
             if share_url:
-                final_message = f"Agent task started!\n\nShare URL: {share_url.public_share_url}\n\nTask: {task}"
+                final_message = f"Agent task started!\n\nShare URL: {share_url.share_url}\n\nTask: {task}"
             else:
                 final_message = f"Agent task started!\n\nTask: {task}\n\nNote: Share link could not be created."
 

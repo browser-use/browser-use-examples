@@ -23,7 +23,7 @@ export default function LivePage() {
     <div className="relative h-full w-full grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
       {/* Live Browser */}
       <div className="col-span-1 w-full h-full overflow-hidden border-r border-dashed border-stone-400">
-        {live.session.liveUrl ? (
+        {live.session?.liveUrl ? (
           <iframe
             src={live.session.liveUrl}
             className="w-full h-full border border-transparent"

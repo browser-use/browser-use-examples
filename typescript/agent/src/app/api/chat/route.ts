@@ -51,55 +51,72 @@ const tools = {
 
       const gen = bu.tasks.stream(res.id, { signal: abortSignal });
 
-      for await (const event of gen) {
-        const status = event.data;
+      try {
+        for await (const event of gen) {
+          const status = event.data;
 
-        console.log(`[agent] task status: ${status.status}`);
+          console.log(`[agent] task status: ${status.status}`);
 
-        if (status.doneOutput) {
-          console.log(`[agent] task output: ${status.doneOutput}`);
-        }
+          if (status.doneOutput) {
+            console.log(`[agent] task output: ${status.doneOutput}`);
+          }
 
-        switch (status.status) {
-          case "started":
-          case "paused":
-          case "stopped":
-            if (status.steps == null || status.steps.length === 0) {
+          // Fetch session to get liveUrl
+          let liveUrl: string | null = null;
+          if (status.sessionId) {
+            try {
+              const session = await bu.sessions.retrieve(status.sessionId);
+              liveUrl = session.liveUrl ?? null;
+              console.log(`[agent] liveUrl:`, liveUrl);
+            } catch (err) {
+              console.error(`[agent] Failed to fetch session:`, err);
+            }
+          }
+
+          switch (status.status) {
+            case "started":
+            case "paused":
+            case "stopped":
+              if (status.steps == null || status.steps.length === 0) {
+                yield {
+                  status: "starting",
+                  liveUrl: liveUrl,
+                } satisfies TaskStatus;
+
+                break;
+              }
+
+              const lastStep = status.steps[status.steps.length - 1];
+
               yield {
-                status: "starting",
-                liveUrl: status.session.liveUrl ? status.session.liveUrl : null,
+                status: "running",
+                lastStep: lastStep,
+                liveUrl: liveUrl,
               } satisfies TaskStatus;
 
               break;
-            }
 
-            const lastStep = status.steps[status.steps.length - 1];
+            case "finished":
+              if (liveUrl == null || status.doneOutput == null) {
+                break;
+              }
 
-            yield {
-              status: "running",
-              lastStep: lastStep,
-              liveUrl: status.session.liveUrl ? status.session.liveUrl : null,
-            } satisfies TaskStatus;
+              yield {
+                status: "done",
+                output: status.doneOutput,
+                liveUrl: liveUrl,
+                sessionId: status.sessionId,
+              } satisfies TaskStatus;
 
-            break;
-
-          case "finished":
-            if (status.session.liveUrl == null || status.doneOutput == null) {
               break;
-            }
 
-            yield {
-              status: "done",
-              output: status.doneOutput,
-              liveUrl: status.session.liveUrl,
-              sessionId: status.sessionId,
-            } satisfies TaskStatus;
-
-            break;
-
-          default:
-            throw new Error(`Unknown status: ${status.status}`);
+            default:
+              throw new Error(`Unknown status: ${status.status}`);
+          }
         }
+      } catch (error) {
+        console.error('[agent] Error in task execution:', error);
+        throw error;
       }
     },
   }),

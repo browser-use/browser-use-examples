@@ -1,5 +1,6 @@
-import { verifyWebhookEventSignature } from "browser-use-sdk/lib/webhooks.mjs";
+import { createWebhookSignature } from "browser-use-sdk/lib/webhooks.mjs";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 
 import * as schema from "@/db/schema";
 import { db } from "@/lib/db";
@@ -7,41 +8,66 @@ import { ExhaustiveSwitchCheck } from "@/lib/types";
 import { browseruse } from "@/lib/sdk";
 import { zScrapperSchema } from "@/lib/prompt";
 
+// Webhook event schema
+const zWebhookEvent = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("test"),
+    timestamp: z.string(),
+    payload: z.object({ test: z.literal("ok") }),
+  }),
+  z.object({
+    type: z.literal("agent.task.status_update"),
+    timestamp: z.string(),
+    payload: z.object({
+      session_id: z.string(),
+      task_id: z.string(),
+      status: z.enum(["started", "paused", "finished", "stopped", "initializing"]),
+      metadata: z.record(z.string(), z.unknown()).optional(),
+    }),
+  }),
+]);
+
 export async function POST(request: Request) {
-  const body = await request.text();
+  try {
+    const body = await request.json();
 
-  const signature = request.headers.get("x-browser-use-signature") as string;
-  const timestamp = request.headers.get("x-browser-use-timestamp") as string;
+    const signature = request.headers.get("x-browser-use-signature") as string;
+    const timestamp = request.headers.get("x-browser-use-timestamp") as string;
 
-  const event = await verifyWebhookEventSignature(
-    {
-      body,
-      signature,
-      timestamp,
-    },
-    {
+    // Verify signature manually (SDK has a bug - it uses body.payload instead of body)
+    const expectedSignature = createWebhookSignature({
+      payload: body,
+      timestamp: timestamp,
       secret: process.env.SECRET_KEY!,
-    }
-  );
+    });
 
-  if (event.ok) {
-    switch (event.event.type) {
+    if (signature !== expectedSignature) {
+      return new Response("Signature verification failed", { status: 401 });
+    }
+
+    // Parse and validate the event
+    const parseResult = zWebhookEvent.safeParse(body);
+    if (!parseResult.success) {
+      return new Response("Invalid event format", { status: 400 });
+    }
+
+    const event = parseResult.data;
+
+    switch (event.type) {
       case "test":
         break;
       case "agent.task.status_update": {
-        if (event.event.payload.status !== "finished") {
+        if (event.payload.status !== "finished") {
           break;
         }
 
-        const { task_id } = event.event.payload;
+        const { task_id } = event.payload;
 
         const dbProfile = await db.query.profiles.findFirst({
           where: eq(schema.profiles.browserUseTaskId, task_id),
         });
 
         if (!dbProfile) {
-          // NOTE: It's possible that we receive a webhook for a task
-          //       this app isn't monitoring.
           break;
         }
 
@@ -51,17 +77,37 @@ export async function POST(request: Request) {
         });
 
         if (!buTask) {
+          await db
+            .update(schema.profiles)
+            .set({ status: "failed" })
+            .where(eq(schema.profiles.id, dbProfile.id));
           throw new Error(`Task ${task_id} not found on BrowserUse Cloud!`);
         }
 
-        const payload = buTask.parsedOutput;
+        // Try multiple ways to get the parsed output
+        let payload = (buTask as any).parsed || buTask.parsedOutput;
 
-        if (!payload) {
-          throw new Error(`Task ${task_id} has no output!`);
+        // If parsedOutput is null but output exists, try parsing it manually
+        if (!payload && (buTask as any).output) {
+          try {
+            const outputStr = (buTask as any).output;
+            // Parse the JSON string
+            payload = zScrapperSchema.parse(JSON.parse(outputStr));
+          } catch (parseError) {
+            // Parsing failed, continue to check if payload is null below
+          }
         }
 
-        // NOTE: We use a transaction to ensure that the profile is updated
-        //       and the data is inserted in a consistent state.
+        if (!payload) {
+          await db
+            .update(schema.profiles)
+            .set({ status: "failed" })
+            .where(eq(schema.profiles.id, dbProfile.id));
+
+          // Don't throw - just mark as failed and continue
+          break;
+        }
+
         await db.transaction(async (tx) => {
           await tx
             .update(schema.profiles)
@@ -117,9 +163,11 @@ export async function POST(request: Request) {
         break;
       }
       default:
-        throw new ExhaustiveSwitchCheck(event.event);
+        throw new ExhaustiveSwitchCheck(event);
     }
-  }
 
-  return new Response("OK");
+    return new Response("OK");
+  } catch (error) {
+    return new Response("Internal server error", { status: 500 });
+  }
 }
