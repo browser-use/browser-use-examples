@@ -7,7 +7,7 @@ import { browseruse } from "@/lib/sdk";
 import * as schema from "../../../db/schema";
 
 // Allow streaming responses up to 1 minutes
-export const maxDuration = 1 * 60;
+export const maxDuration = 60;
 
 //
 
