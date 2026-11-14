@@ -328,3 +328,83 @@ def test_parse_args_requires_explicit_user_authorization() -> None:
         ["--url", "https://example.com", "--model", "test-model", "--authorized"]
     )
     assert parsed.authorized is True
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://example..com/",
+        "https://exa mple.com/",
+        "https://example.com\\@localhost/",
+        "https://localhost./",
+        "https://printer.local/",
+    ],
+)
+def test_validate_target_rejects_malformed_or_local_dns(url: str) -> None:
+    with pytest.raises(example.ConfigurationError):
+        example.validate_target(url)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("bad_cdp", [None, "https://attacker.example/?token=test-cdp-data-token"])
+async def test_known_uuid_is_deleted_when_create_response_has_invalid_cdp_url(
+    bad_cdp: str | None,
+) -> None:
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if request.method == "POST":
+            return httpx.Response(201, json={"sessionId": str(SESSION_ID), "cdpBaseUrl": bad_cdp})
+        return httpx.Response(200, json={"ok": True})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        with pytest.raises(example.SessionCreationUnknown) as error:
+            await example.run_example(
+                example.validate_target("https://example.com"),
+                "test-model",
+                API_KEY,
+                "test-openai-key",
+                client=client,
+            )
+    assert error.value.session_id == SESSION_ID
+    assert DATA_TOKEN not in str(error.value)
+    assert [request.method for request in requests] == ["POST", "DELETE"]
+    assert str(requests[-1].url) == f"{example.API_URL}/{SESSION_ID}"
+
+
+@pytest.mark.asyncio
+async def test_owned_http_client_is_closed_even_when_session_delete_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_fakes(monkeypatch, _history(output=example.PageSummary(title="Example")))
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "POST":
+            return httpx.Response(201, json={"sessionId": str(SESSION_ID), "cdpBaseUrl": CDP_URL})
+        return httpx.Response(401)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    monkeypatch.setattr(example.httpx, "AsyncClient", lambda **_: client)
+    try:
+        with pytest.raises(example.CleanupUnconfirmed):
+            await example.run_example(
+                example.validate_target("https://example.com"),
+                "test-model",
+                API_KEY,
+                "test-openai-key",
+            )
+        assert client.is_closed
+    finally:
+        await client.aclose()
+
+
+def test_unicode_hostname_requires_explicit_punycode() -> None:
+    with pytest.raises(example.ConfigurationError, match="ASCII/punycode"):
+        example.validate_target("https://faß.de/")
+
+
+def test_punycode_hostname_has_stable_authorized_origin() -> None:
+    target = example.validate_target("https://xn--fa-hia.de/")
+    assert target.origin == "https://xn--fa-hia.de"
+    assert target.url == "https://xn--fa-hia.de/"

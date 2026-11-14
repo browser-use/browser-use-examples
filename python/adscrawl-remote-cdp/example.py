@@ -34,7 +34,11 @@ class ConfigurationError(ExampleError):
 
 
 class SessionCreationUnknown(ExampleError):
-    """Creation may have succeeded, but no safe session UUID was obtained."""
+    """Creation did not yield a usable session; preserve a known UUID for cleanup."""
+
+    def __init__(self, message: str, *, session_id: UUID | None = None) -> None:
+        super().__init__(message)
+        self.session_id = session_id
 
 
 class CleanupUnconfirmed(ExampleError):
@@ -56,6 +60,8 @@ class Target:
 
 def validate_target(raw: str) -> Target:
     """Reject obvious non-public, credential-bearing, and non-web URL forms."""
+    if any(character.isspace() or ord(character) < 32 for character in raw) or "\\" in raw:
+        raise ConfigurationError("--url must not contain raw whitespace, controls, or backslashes")
     try:
         parsed = urlsplit(raw)
     except ValueError:
@@ -64,13 +70,19 @@ def validate_target(raw: str) -> Target:
         raise ConfigurationError("--url must be a public HTTP(S) URL")
     if parsed.username is not None or parsed.password is not None or parsed.fragment:
         raise ConfigurationError("--url must not contain userinfo or a fragment")
+    if not parsed.hostname.isascii():
+        raise ConfigurationError("--url must use an ASCII/punycode DNS hostname")
     try:
-        host = parsed.hostname.encode("idna").decode("ascii").lower()
+        host = parsed.hostname.encode("idna").decode("ascii").lower().rstrip(".")
+    except UnicodeError:
+        raise ConfigurationError("--url must contain a valid DNS hostname") from None
+    try:
         address = ipaddress.ip_address(host)
-    except (ValueError, UnicodeError):
+    except ValueError:
         address = None
     if (
-        address is not None
+        not host
+        or address is not None
         or host == "localhost"
         or host.endswith(".localhost")
         or host.endswith(".local")
@@ -177,9 +189,13 @@ async def create_session(client: httpx.AsyncClient, api_key: str) -> tuple[UUID,
     cdp_url = body.get("cdpBaseUrl")
     if not isinstance(cdp_url, str):
         raise SessionCreationUnknown(
-            "Invalid session response; inspect AdsCrawl sessions before retrying"
+            "Invalid session response; inspect AdsCrawl sessions before retrying",
+            session_id=session_id,
         )
-    validate_cdp_url(cdp_url, session_id)
+    try:
+        validate_cdp_url(cdp_url, session_id)
+    except SessionCreationUnknown as error:
+        raise SessionCreationUnknown(str(error), session_id=session_id) from None
     return session_id, cdp_url
 
 
@@ -279,6 +295,10 @@ async def run_example(
             status = "incomplete"
         return {"status": status, "requested_url": target.display_url, "summary": summary}
     except asyncio.CancelledError:
+        raise
+    except SessionCreationUnknown as error:
+        if error.session_id is not None:
+            session_id = error.session_id
         raise
     except ExampleError:
         raise

@@ -42,6 +42,8 @@ uv run python example.py \
 
 Replace the two placeholder values and model ID locally. Never commit real credentials. You can omit `--authorized` only to see the CLI refuse to run.
 
+For predictable domain matching, this minimal CLI accepts ASCII DNS hostnames only. Supply internationalized domain names in their ASCII/punycode form. Raw whitespace, control characters, and backslashes are rejected.
+
 ## Output and cleanup
 
 The script prints JSON with `status`, a query/fragment-stripped `requested_url`, and the structured `title`, `h1`, and up to three bullet points. `incomplete` means the agent did not return the requested structured result; `error` is deliberately generic and does not print provider response bodies or the CDP token.
