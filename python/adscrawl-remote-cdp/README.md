@@ -42,11 +42,13 @@ uv run python example.py \
 
 Replace the two placeholder values and model ID locally. Never commit real credentials. You can omit `--authorized` only to see the CLI refuse to run.
 
-For predictable domain matching, this minimal CLI accepts ASCII DNS hostnames only. Supply internationalized domain names in their ASCII/punycode form. Raw whitespace, control characters, and backslashes are rejected.
+For predictable domain matching, this minimal CLI accepts ASCII DNS hostnames only. Supply internationalized domain names in their ASCII/punycode form. DNS labels must be 1–63 letters, digits, or hyphens and must not start or end with a hyphen; the hostname is limited to 253 characters after removing one optional terminal root dot. Empty labels, raw whitespace, control characters, and backslashes are rejected.
 
 ## Output and cleanup
 
 The script prints JSON with `status`, a query/fragment-stripped `requested_url`, and the structured `title`, `h1`, and up to three bullet points. `incomplete` means the agent did not return the requested structured result; `error` is deliberately generic and does not print provider response bodies or the CDP token.
+
+The CLI exits with code `0` only for `completed`; `incomplete` and `error` exit with code `1`. Configuration errors and unconfirmed cleanup also fail with a nonzero exit code.
 
 The AdsCrawl control-plane API key is used only for creating and deleting the session. The CDP data token is carried inside `cdpBaseUrl` and passed to Browser Use as-is. The OpenAI key is used by `ChatOpenAI`. Check the current service/model terms and pricing before running: creating a remote browser session and making model requests can incur charges.
 
@@ -59,7 +61,7 @@ uv run pytest -q
 uv run ruff check .
 ```
 
-Tests use `httpx.MockTransport`, a fake Browser Use agent, and pytest's disabled-socket fixture. They exercise AdsCrawl request/response handling, the Browser Use 1.0 `AgentHistoryList.structured_output` shape, authorization and domain configuration, credential redaction, retryable deletion, and cleanup ownership. They do not create a real AdsCrawl session, connect to a CDP browser, visit a website, or call a model. Passing them is not live end-to-end or production verification.
+Tests use `httpx.MockTransport`, a fake Browser Use agent, and pytest's disabled-socket fixture. They exercise AdsCrawl request/response handling, the Browser Use 1.0 `AgentHistoryList.structured_output` shape, authorization and DNS label boundaries, the actual `__main__` entry point and result-to-exit-code mapping, credential redaction, retryable deletion, and cleanup ownership. They do not create a real AdsCrawl session, connect to a CDP browser, visit a website, or call a model. Passing them is not live end-to-end or production verification.
 
 ## Project files
 

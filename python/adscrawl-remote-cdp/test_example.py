@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import runpy
 import sys
 from types import SimpleNamespace
 from uuid import UUID
@@ -330,10 +331,53 @@ def test_parse_args_requires_explicit_user_authorization() -> None:
     assert parsed.authorized is True
 
 
+@pytest.mark.parametrize("exit_code", [0, 1])
+def test_module_entry_point_propagates_main_status(
+    monkeypatch: pytest.MonkeyPatch, exit_code: int
+) -> None:
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["example.py", "--url", PUBLIC_URL, "--model", "test-model", "--authorized"],
+    )
+    # Do not execute the coroutine or read API key environment variables.
+    monkeypatch.setattr(example.asyncio, "run", lambda coro: (coro.close(), exit_code)[1])
+    with pytest.raises(SystemExit) as exit_info:
+        runpy.run_path(example.__file__, run_name="__main__")
+    assert exit_info.value.code == exit_code
+
+
+@pytest.mark.parametrize("status, exit_code", [("completed", 0), ("incomplete", 1), ("error", 1)])
+def test_main_maps_result_status_to_exit_code(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    status: str,
+    exit_code: int,
+) -> None:
+    async def fake_run(*_: object, **__: object) -> dict[str, object]:
+        return {"status": status, "requested_url": "https://example.com/article", "summary": {}}
+
+    monkeypatch.setenv("ADSCRAWL_API_KEY", API_KEY)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
+    monkeypatch.setattr(example, "run_example", fake_run)
+    code = example.main(["--url", PUBLIC_URL, "--model", "test-model", "--authorized"])
+    assert code == exit_code
+    output = capsys.readouterr().out
+    assert json.loads(output)["status"] == status
+    assert API_KEY not in output
+    assert "test-openai-key" not in output
+
+
 @pytest.mark.parametrize(
     "url",
     [
         "https://example..com/",
+        "https://.example.com/",
+        "https://" + "a" * 64 + ".com/",
+        "https://" + ".".join(["a" * 63] * 4) + "/",
+        "https://-bad.example/",
+        "https://bad-.example/",
+        "https://example.com../",
         "https://exa mple.com/",
         "https://example.com\\@localhost/",
         "https://localhost./",
@@ -343,6 +387,25 @@ def test_parse_args_requires_explicit_user_authorization() -> None:
 def test_validate_target_rejects_malformed_or_local_dns(url: str) -> None:
     with pytest.raises(example.ConfigurationError):
         example.validate_target(url)
+
+
+def test_validate_target_normalizes_single_terminal_root_dot() -> None:
+    target = example.validate_target("https://example.com./")
+    assert target.origin == "https://example.com"
+
+
+@pytest.mark.parametrize(
+    "host",
+    [
+        "node-1.example",
+        "1.example",
+        "a" * 63 + ".example",
+        ".".join(["a" * 63] * 3 + ["b" * 61]),
+    ],
+)
+def test_validate_target_accepts_valid_dns_label_boundaries(host: str) -> None:
+    target = example.validate_target(f"https://{host}/")
+    assert target.origin == f"https://{host}"
 
 
 @pytest.mark.asyncio

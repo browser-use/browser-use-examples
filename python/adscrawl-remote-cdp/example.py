@@ -12,6 +12,7 @@ import ipaddress
 import json
 import logging
 import os
+import re
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
@@ -73,9 +74,20 @@ def validate_target(raw: str) -> Target:
     if not parsed.hostname.isascii():
         raise ConfigurationError("--url must use an ASCII/punycode DNS hostname")
     try:
-        host = parsed.hostname.encode("idna").decode("ascii").lower().rstrip(".")
+        host = parsed.hostname.encode("idna").decode("ascii").lower()
     except UnicodeError:
         raise ConfigurationError("--url must contain a valid DNS hostname") from None
+    # Allow one terminal root dot, but do not erase malformed repeated dots.
+    if host.endswith("."):
+        host = host[:-1]
+    labels = host.split(".")
+    if len(host) > 253 or any(
+        not label
+        or len(label) > 63
+        or re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", label) is None
+        for label in labels
+    ):
+        raise ConfigurationError("--url must contain a valid DNS hostname")
     try:
         address = ipaddress.ip_address(host)
     except ValueError:
@@ -356,4 +368,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
