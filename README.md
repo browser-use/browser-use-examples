@@ -13,3 +13,4 @@
 ### Python
 
 - **[slack](./python/slack/README.md)**: An example Slack bot that listens for mentions and interacts with users using the Browser Use SDK, including setup for local development and required Slack permissions.
+- **[adscrawl-remote-cdp](./python/adscrawl-remote-cdp/README.md)**: An independent example of the open-source Browser Use agent connecting to an AdsCrawl temporary Remote CDP session (not Browser Use Cloud).
